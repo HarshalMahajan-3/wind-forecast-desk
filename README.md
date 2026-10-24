@@ -120,7 +120,7 @@ These metrics support forecast evaluation and procurement judgement. They do not
 Clone the repository and navigate to its root directory:
 
 ```bash
-git clone <YOUR_PUBLIC_GITHUB_REPOSITORY_URL>
+git clone https://github.com/HarshalMahajan-3/wind-forecast-desk.git
 cd wind-desk-audit
 ```
 
