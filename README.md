@@ -2,7 +2,7 @@
 
 Wind Forecast Desk is a decision-support dashboard for evaluating UK national wind generation forecasts for January 2026. It compares Elexon BMRS WINDFOR forecasts available at a configurable day-ahead decision cutoff with FUELHH actual wind generation.
 
-The application helps users understand forecast accuracy, identify data-quality gaps, and evaluate the information available when making day-ahead electricity procurement decisions.
+The application helps users evaluate forecast accuracy, identify data-quality gaps, and understand the information available when making day-ahead electricity procurement decisions.
 
 ## Features
 
@@ -22,7 +22,8 @@ The application helps users understand forecast accuracy, identify data-quality 
 - **Backend testing:** pytest
 - **Containerization:** Docker and Docker Compose
 - **Data source:** Elexon BMRS datasets
-- **Frontend deployment configuration:** Vercel
+- **Frontend hosting:** Vercel
+- **Backend hosting:** Render
 
 ## Project Structure
 
@@ -90,40 +91,40 @@ The frontend source code and production Dockerfile are located in the repository
 
 ## Data Sources
 
-### Actual Wind Generation
+### Actual Wind Generation: FUELHH
 
-The FUELHH dataset provides actual generation data.
+FUELHH provides actual generation data.
 
-Documentation:
+Documentation:  
 https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream
 
-### Wind Generation Forecasts
+### Wind Generation Forecasts: WINDFOR
 
-The WINDFOR dataset provides wind generation forecasts.
+WINDFOR provides wind generation forecasts.
 
-Documentation:
+Documentation:  
 https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream
 
 The application uses bundled January 2026 snapshots sourced from Elexon BMRS. It does not fetch live data on every page load.
 
-WINDFOR forecasts have hourly target resolution, while FUELHH actual generation data is half-hourly. The application identifies forecast-resolution gaps instead of interpolating forecast values that are not present in the source data.
+WINDFOR forecasts have hourly target resolution, while FUELHH actual generation data is half-hourly. The application identifies forecast-resolution gaps rather than interpolating forecast values that are not present in the source data.
 
 ## Forecast Methodology
 
 For each delivery date, the decision cutoff is the configured local time on the preceding calendar day in the `Europe/London` time zone.
 
-For each hourly target, the backend selects the most recently published forecast available at or before the decision cutoff. Forecasts published after the cutoff are excluded from the evaluation to avoid look-ahead bias.
+For each hourly target, the backend selects the most recently published eligible forecast available at or before the decision cutoff. Forecasts published after the cutoff are excluded from the evaluation to avoid look-ahead bias.
 
 Forecast error is calculated as:
 
-**Forecast error = Forecast generation - Actual generation**
+**Forecast error = Forecast generation − Actual generation**
 
 The dashboard reports the following metrics:
 
 - **MAE (Mean Absolute Error):** Measures the average absolute difference between forecast and actual generation.
 - **RMSE (Root Mean Squared Error):** Measures forecast error magnitude while giving greater weight to larger errors.
 - **Bias:** Average signed forecast error. Positive bias indicates over-forecasting, while negative bias indicates under-forecasting.
-- **WAPE (Weighted Absolute Percentage Error):** Expresses the total absolute forecast error relative to total actual generation.
+- **WAPE (Weighted Absolute Percentage Error):** Expresses total absolute forecast error relative to total actual generation.
 - **Coverage:** Reports data availability and matched observations separately from forecast accuracy.
 
 Missing eligible forecast vintages and differences in dataset resolution affect coverage. Missing forecasts are identified rather than treated as valid observations.
@@ -140,6 +141,8 @@ These metrics support forecast evaluation and procurement judgement. They do not
 
 ### 1. Clone the Repository
 
+Open a terminal and run:
+
 ```bash
 git clone https://github.com/HarshalMahajan-3/wind-forecast-desk.git
 cd wind-forecast-desk
@@ -153,17 +156,17 @@ Run from the repository root:
 docker compose up --build
 ```
 
-To run the services in the background instead:
+To run the services in the background:
 
 ```bash
 docker compose up -d --build
 ```
 
-Docker Compose builds and runs the frontend and backend services and configures their internal network connection.
+Docker Compose builds and starts both services and configures their internal network connection.
 
 ### 3. Open the Application
 
-Once both services are running, open:
+Once the services are running, open:
 
 - **Dashboard:** http://localhost:3000
 - **FastAPI documentation:** http://localhost:8000/docs
@@ -173,7 +176,7 @@ The health endpoint should return a successful response when the backend is runn
 
 ### 4. Stop the Application
 
-If the application was started in the foreground, press `Ctrl+C` in the terminal.
+If running in the foreground, press `Ctrl+C`.
 
 Then run:
 
@@ -225,7 +228,7 @@ The development server displays the frontend URL in the terminal.
 
 The browser-facing API defaults to `http://localhost:8000`. If the backend runs at a different address, configure `VITE_API_BASE_URL` before starting or building the frontend.
 
-The `.env.example` file contains the default local API URL. It is an example configuration file and does not need to be renamed to `.env` for the application's default local setup.
+The `.env.example` file documents the default local API URL. It does not need to be renamed to `.env` for the default local setup.
 
 ## Testing
 
@@ -248,9 +251,9 @@ cd backend
 python -m pytest -q
 ```
 
-The backend tests cover the FastAPI endpoints and forecast-analysis behavior.
+The backend test suite covers the FastAPI endpoints and forecast-analysis behavior.
 
-During local verification, all 17 frontend tests and all 6 backend tests passed. The backend test run reported a Starlette deprecation warning related to the test client; this warning did not cause any tests to fail.
+During local verification, all 17 frontend tests and all 6 backend tests passed. The backend test run reported a Starlette deprecation warning related to the test client; the warning did not cause any tests to fail.
 
 ## Docker Architecture
 
@@ -284,38 +287,27 @@ These addresses serve different purposes: `backend` is the Docker service hostna
 
 ## Deployment
 
-The public deployment links should be added after the services have been deployed and verified.
+The application is deployed with the frontend on Vercel and the FastAPI backend on Render.
 
-- **Live Dashboard:** Pending deployment
-- **Backend API:** Pending deployment
+- **Live Dashboard:** https://wind-forecast-desk.vercel.app/
+- **Backend API:** https://wind-forecast-desk.onrender.com
+- **API Documentation:** https://wind-forecast-desk.onrender.com/docs
+- **Backend Health Check:** https://wind-forecast-desk.onrender.com/health
 - **Public GitHub Repository:** https://github.com/HarshalMahajan-3/wind-forecast-desk
-- **Demo Video:** Pending recording and upload
 
-### Backend Deployment
+### Backend Configuration
 
-The backend can be deployed as a Python web service using a compatible hosting provider.
+The backend runs using FastAPI and Uvicorn. The health endpoint and API documentation are available through the deployed backend URL.
 
-For example, when deploying to Render:
+### Frontend Configuration
 
-- **Root Directory:** `backend`
-- **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+The frontend is deployed to Vercel using the TanStack Start configuration included in the repository.
 
-After deployment, verify the health endpoint and API documentation using the actual backend URL.
+The `VITE_API_BASE_URL` environment variable points the frontend to the public backend URL. The backend's `CORS_ORIGINS` configuration should include the exact deployed frontend origin.
 
-### Frontend Deployment
+The `API_INTERNAL_BASE_URL` value of `http://backend:8000` is intended for communication between services in local Docker Compose. It is not the public backend URL.
 
-The frontend can be deployed to Vercel using the TanStack Start configuration included in the repository.
-
-For a separately hosted backend:
-
-1. Deploy the FastAPI backend first.
-2. Set `VITE_API_BASE_URL` to the actual public backend URL in the frontend hosting environment before building.
-3. Configure the backend's `CORS_ORIGINS` environment variable to include the exact public frontend origin.
-4. Deploy the frontend using the repository's TanStack Start configuration.
-5. Verify the dashboard, analysis endpoint, and forecast-vintage functionality using the public URLs.
-
-The `API_INTERNAL_BASE_URL` value of `http://backend:8000` is intended for local Docker Compose networking. It is not the public backend URL to use for a separate hosted frontend.
+Before submission, verify that the dashboard, analysis endpoint, and forecast-vintage functionality work using the public URLs. Test the links in an incognito browser window.
 
 ## AI Tool Disclosure
 
