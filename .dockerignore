@@ -1,0 +1,13 @@
+.git
+node_modules
+dist
+.output
+.vinxi
+.tanstack
+.venv
+venv
+__pycache__
+.pytest_cache
+.env
+.env.*
+!.env.example
